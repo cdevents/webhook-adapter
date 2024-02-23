@@ -1,7 +1,7 @@
 # CDEvents Webhook Adapter
 
-A CDEvents Webhook Adapter can receive events over Webhook and translate them to CDEvents, 
-with the help of various translators which supports publishing events over Webhooks.
+A CDEvents Webhook Adapter can receive events via Webhooks and translate them into CDEvents, 
+with the help of various translators which supports publishing events via Webhooks.
 
-This adapter provides client and server implementation over RPC connection and exposes the interface to implement the plugins,  
-Various translators can be implemented as plugins using Hashicorp's [go-plugin](https://github.com/hashicorp/go-plugin/)
+This adapter provides client and server implementation over an RPC connection and exposes an interface for plugin implementation,  
+Various translators can be developed as plugins using Hashicorp's [go-plugin](https://github.com/hashicorp/go-plugin/)
