@@ -1,1 +1,1 @@
-# webhook-cdevents-adapter
+# webhook-adapter
