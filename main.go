@@ -27,14 +27,14 @@ import (
 	"path"
 	"strings"
 
-	"github.com/cdevents/webhook-cdevents-adapter/pkg/cdevents"
+	"github.com/cdevents/webhook-adapter/pkg/cdevents"
 	"github.com/hashicorp/go-plugin"
 )
 
 func run() error {
 	translator, err := cdevents.LoadConfig("translator-plugins.yaml")
 	if err != nil {
-		log.Fatalf("Error loading translator plugins Config: %s\n", err)
+		log.Printf("Error loading translator plugins Config: %s\n", err)
 		return err
 	}
 	log.Printf("Loaded translator plugins Config: %s\n", translator)
@@ -44,22 +44,7 @@ func run() error {
 	log.Printf("Server listening on :%d\n", port)
 	for _, translatorPlugin := range translator.Translator.Plugins {
 		pluginPath := path.Join(translator.Translator.Path, translatorPlugin.Name)
-		if translatorPlugin.PluginURL != "" && strings.ToLower(os.Getenv("DOWNLOAD_PLUGIN")) == "true" {
-			pluginURL, err := cdevents.ValidateURL(translatorPlugin.PluginURL)
-			if err != nil {
-				return err
-			}
-			err = cdevents.Download(pluginURL, pluginPath)
-			if err != nil {
-				log.Fatalf("Error downloading translator plugin : %s\n", err)
-				return err
-			}
-
-		} else if _, err := os.Stat(pluginPath); os.IsNotExist(err) {
-			log.Printf("Plugin %s not downloaded under : %s\n", translatorPlugin.Name, translator.Translator.Path)
-			log.Printf("Please download the plugin or update the pluginURL and set the env variable DOWNLOAD_PLUGIN=true for : %s\n", translatorPlugin.Name)
-			return err
-		}
+		downloadPlugins(translatorPlugin, pluginPath, translator)
 		endpoint := "/translate/" + translatorPlugin.Name
 		http.HandleFunc(endpoint, makeHandler(translatorPlugin, pluginPath))
 		log.Printf("Serving Translator endpoint for %s plugin : %s\n", translatorPlugin.Name, endpoint)
@@ -67,10 +52,30 @@ func run() error {
 
 	err = http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 	if err != nil {
-		log.Fatalf("Error starting HTTP server: %v\n", err)
+		log.Printf("Error starting HTTP server: %v\n", err)
 		return err
 	}
 	return nil
+}
+
+func downloadPlugins(translatorPlugin cdevents.Plugin, pluginPath string, translator *cdevents.TranslatorPlugins) {
+	if translatorPlugin.PluginURL != "" && strings.ToLower(os.Getenv("DOWNLOAD_PLUGIN")) == "true" {
+		pluginURL, err := cdevents.ValidateURL(translatorPlugin.PluginURL)
+		if err != nil {
+			log.Printf("Error downloading translator plugin from URL : %s\n", pluginURL)
+			return
+		}
+		err = cdevents.Download(pluginURL, pluginPath)
+		if err != nil {
+			log.Printf("Error downloading translator plugin : %s\n", err)
+			return
+		}
+
+	} else if _, err := os.Stat(pluginPath); os.IsNotExist(err) {
+		log.Printf("Plugin %s not downloaded under : %s\n", translatorPlugin.Name, translator.Translator.Path)
+		log.Printf("Please download the plugin or update the pluginURL and set the env variable DOWNLOAD_PLUGIN=true for : %s\n", translatorPlugin.Name)
+		return
+	}
 }
 
 func makeHandler(translatorPlugin cdevents.Plugin, pluginPath string) http.HandlerFunc {
@@ -86,14 +91,14 @@ func makeHandler(translatorPlugin cdevents.Plugin, pluginPath string) http.Handl
 
 		rpcClient, err := client.Client()
 		if err != nil {
-			log.Fatalf("Error connecting RPC client: %v", err)
+			log.Printf("Error connecting RPC client: %v", err)
 			return
 		}
 		log.Printf("RPC client created for plugin %s\n", translatorPlugin.Name)
 
 		raw, err := rpcClient.Dispense("translator_grpc")
 		if err != nil {
-			log.Fatalf("Error requesting the GRPC translator plugin: %v", err)
+			log.Printf("Error requesting the GRPC translator plugin: %v", err)
 			return
 		}
 
@@ -108,9 +113,9 @@ func makeHandler(translatorPlugin cdevents.Plugin, pluginPath string) http.Handl
 			http.Error(w, "Error reading request body", http.StatusInternalServerError)
 			return
 		}
-		fmt.Println("Received event payload : " + string(body))
+		log.Println("Received event payload : " + string(body))
 		event, err := eventTranslator.TranslateEvent(string(body))
-		fmt.Println("Event translated : " + event)
+		log.Println("Event translated : " + event)
 		if err != nil {
 			http.Error(w, "Error translating event", http.StatusInternalServerError)
 			return

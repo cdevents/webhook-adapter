@@ -19,7 +19,7 @@ package cdevents
 
 import (
 	"context"
-	"github.com/cdevents/webhook-cdevents-adapter/pkg/proto"
+	"github.com/cdevents/webhook-adapter/pkg/proto"
 )
 
 type GRPCClient struct {

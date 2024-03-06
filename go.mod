@@ -1,4 +1,4 @@
-module github.com/cdevents/webhook-cdevents-adapter
+module github.com/cdevents/webhook-adapter
 
 go 1.21.5
 
