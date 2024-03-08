@@ -23,9 +23,9 @@ import (
 )
 
 func TestDownloadPlugin(t *testing.T) {
-	err := Download("http://github.com/cdevents/gerrit-translator/version/plugin", "./testdata/plugin")
-	os.Remove("./testdata/plugin")
+	err := Download("http://github.com/cdevents/gerrit-translator/version/plugin", "./testdata/plugins")
+	os.Remove("./testdata/plugins")
 	if err != nil {
-		t.Errorf("Expected plugin downlaod to be successful.")
+		t.Errorf("Expected plugins downlaod to be successful.")
 	}
 }

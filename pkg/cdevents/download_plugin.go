@@ -26,7 +26,7 @@ func Download(pluginURL string, pluginPath string) error {
 	cmd := exec.Command("curl", "-o", pluginPath, pluginURL)
 	err := cmd.Run()
 	if err != nil {
-		log.Fatalf("Error downloading plugin from : %s\n", pluginURL)
+		log.Fatalf("Error downloading plugins from : %s\n", pluginURL)
 		return err
 	}
 	log.Printf("Plugin downloaded successfully to: %s\n", pluginPath)

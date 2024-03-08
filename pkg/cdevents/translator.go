@@ -25,7 +25,7 @@ import (
 	"net/rpc"
 )
 
-// Handshake is a common handshake that is shared by plugin and host.
+// Handshake is a common handshake that is shared by plugins and host.
 var Handshake = plugin.HandshakeConfig{
 	// This isn't required when using VersionedPlugins
 	ProtocolVersion:  1,
@@ -39,12 +39,12 @@ var PluginMap = map[string]plugin.Plugin{
 	"translator":      &TranslatorPlugin{},
 }
 
-// EventTranslator is the interface that we're exposing as a plugin.
+// EventTranslator is the interface that we're exposing as a plugins.
 type EventTranslator interface {
 	TranslateEvent(event string) (string, error)
 }
 
-// This is the implementation of plugin.Plugin so we can serve/consume this.
+// This is the implementation of plugins.Plugin so we can serve/consume this.
 type TranslatorPlugin struct {
 	// Concrete implementation, written in Go. This is only used for plugins
 	// that are written in Go.

@@ -19,6 +19,7 @@ package cdevents
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	cdeventssdk "github.com/cdevents/sdk-go/pkg/api"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -70,17 +71,17 @@ func ValidateURL(URL string) (string, error) {
 	return parsedURL.String(), nil
 }
 
-func SendCDEvent(event string, messageBrokerURL string) {
+func SendCDEvent(event string, messageBrokerURL string) error {
 	fmt.Println("IN SendCDEvent with event " + event)
 	cdEvent, err := cdeventssdk.NewFromJsonString(event)
 	if err != nil {
 		log.Printf("failed to create CDEvent from Json string, %v", err)
-		return
+		return err
 	}
 	ce, err := cdeventssdk.AsCloudEvent(cdEvent)
 	if err != nil {
 		log.Printf("failed to create CDEvent as CloudEvent, %v", err)
-		return
+		return err
 	}
 
 	ctx := cloudevents.ContextWithTarget(context.Background(), messageBrokerURL)
@@ -89,11 +90,13 @@ func SendCDEvent(event string, messageBrokerURL string) {
 	c, err := cloudevents.NewClientHTTP()
 	if err != nil {
 		log.Printf("failed to create client, %v", err)
-		return
+		return err
 	}
 	if result := c.Send(ctx, *ce); cloudevents.IsNACK(result) {
 		log.Printf("Failed to send CDEvent, %v", result)
+		return errors.New("failed to send CDEvent")
 	} else {
 		log.Println("Sent CDEvent to target message-broker URL")
 	}
+	return nil
 }

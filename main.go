@@ -44,10 +44,13 @@ func run() error {
 	log.Printf("Server listening on :%d\n", port)
 	for _, translatorPlugin := range translator.Translator.Plugins {
 		pluginPath := path.Join(translator.Translator.Path, translatorPlugin.Name)
-		downloadPlugins(translatorPlugin, pluginPath, translator)
+		err := downloadPlugin(translatorPlugin, pluginPath, translator)
+		if err != nil {
+			return err
+		}
 		endpoint := "/translate/" + translatorPlugin.Name
 		http.HandleFunc(endpoint, makeHandler(translatorPlugin, pluginPath))
-		log.Printf("Serving Translator endpoint for %s plugin : %s\n", translatorPlugin.Name, endpoint)
+		log.Printf("Serving Translator endpoint for %s plugins : %s\n", translatorPlugin.Name, endpoint)
 	}
 
 	err = http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
@@ -58,24 +61,25 @@ func run() error {
 	return nil
 }
 
-func downloadPlugins(translatorPlugin cdevents.Plugin, pluginPath string, translator *cdevents.TranslatorPlugins) {
+func downloadPlugin(translatorPlugin cdevents.Plugin, pluginPath string, translator *cdevents.TranslatorPlugins) error {
 	if translatorPlugin.PluginURL != "" && strings.ToLower(os.Getenv("DOWNLOAD_PLUGIN")) == "true" {
 		pluginURL, err := cdevents.ValidateURL(translatorPlugin.PluginURL)
 		if err != nil {
-			log.Printf("Error downloading translator plugin from URL : %s\n", pluginURL)
-			return
+			log.Printf("Error validating translator plugins URL : %s\n", pluginURL)
+			return err
 		}
 		err = cdevents.Download(pluginURL, pluginPath)
 		if err != nil {
-			log.Printf("Error downloading translator plugin : %s\n", err)
-			return
+			log.Printf("Error downloading translator plugins : %s\n", err)
+			return err
 		}
 
 	} else if _, err := os.Stat(pluginPath); os.IsNotExist(err) {
 		log.Printf("Plugin %s not downloaded under : %s\n", translatorPlugin.Name, translator.Translator.Path)
-		log.Printf("Please download the plugin or update the pluginURL and set the env variable DOWNLOAD_PLUGIN=true for : %s\n", translatorPlugin.Name)
-		return
+		log.Fatalf("Please download the plugins or update the pluginURL and set the env variable DOWNLOAD_PLUGIN=true for : %s\n", translatorPlugin.Name)
+		return err
 	}
+	return nil
 }
 
 func makeHandler(translatorPlugin cdevents.Plugin, pluginPath string) http.HandlerFunc {
@@ -92,13 +96,15 @@ func makeHandler(translatorPlugin cdevents.Plugin, pluginPath string) http.Handl
 		rpcClient, err := client.Client()
 		if err != nil {
 			log.Printf("Error connecting RPC client: %v", err)
+			http.Error(w, "Error connecting to RPC client", http.StatusInternalServerError)
 			return
 		}
-		log.Printf("RPC client created for plugin %s\n", translatorPlugin.Name)
+		log.Printf("RPC client created for plugins %s\n", translatorPlugin.Name)
 
 		raw, err := rpcClient.Dispense("translator_grpc")
 		if err != nil {
-			log.Printf("Error requesting the GRPC translator plugin: %v", err)
+			log.Printf("Error requesting the GRPC translator plugins: %v", err)
+			http.Error(w, "Error connecting to RPC client", http.StatusInternalServerError)
 			return
 		}
 
@@ -120,7 +126,11 @@ func makeHandler(translatorPlugin cdevents.Plugin, pluginPath string) http.Handl
 			http.Error(w, "Error translating event", http.StatusInternalServerError)
 			return
 		}
-		cdevents.SendCDEvent(event, translatorPlugin.MessageBroker)
+		err = cdevents.SendCDEvent(event, translatorPlugin.MessageBroker)
+		if err != nil {
+			http.Error(w, "Error sending CDEvent", http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
