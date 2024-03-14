@@ -19,8 +19,18 @@ syntax = "proto3";
 package proto;
 option go_package = "./proto";
 
+message HeaderValue {
+    string value = 1;
+}
+
+message HeaderEntry {
+    string key = 1;
+    repeated HeaderValue values = 2;
+}
+
 message TranslateEventRequest {
     string event = 1;
+    repeated HeaderEntry headers = 2;
 }
 
 message TranslateEventResponse {

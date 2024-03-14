@@ -120,7 +120,7 @@ func makeHandler(translatorPlugin cdevents.Plugin, pluginPath string) http.Handl
 			return
 		}
 		log.Println("Received event payload : " + string(body))
-		event, err := eventTranslator.TranslateEvent(string(body))
+		event, err := eventTranslator.TranslateEvent(string(body), r.Header)
 		log.Println("Event translated : " + event)
 		if err != nil {
 			http.Error(w, "Error translating event", http.StatusInternalServerError)

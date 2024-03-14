@@ -1,5 +1,3 @@
-# Copyright (c) Nordix
-
 version: v1
 plugins:
   - plugin: buf.build/protocolbuffers/go

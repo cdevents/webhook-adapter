@@ -22,6 +22,7 @@ import (
 	"github.com/cdevents/webhook-adapter/pkg/proto"
 	"github.com/hashicorp/go-plugin"
 	"google.golang.org/grpc"
+	"net/http"
 	"net/rpc"
 )
 
@@ -41,10 +42,10 @@ var PluginMap = map[string]plugin.Plugin{
 
 // EventTranslator is the interface that we're exposing as a plugins.
 type EventTranslator interface {
-	TranslateEvent(event string) (string, error)
+	TranslateEvent(event string, headers http.Header) (string, error)
 }
 
-// This is the implementation of plugins.Plugin so we can serve/consume this.
+// TranslatorPlugin is the implementation of plugins.Plugin so we can serve/consume this.
 type TranslatorPlugin struct {
 	// Concrete implementation, written in Go. This is only used for plugins
 	// that are written in Go.
@@ -59,7 +60,7 @@ func (*TranslatorPlugin) Client(b *plugin.MuxBroker, c *rpc.Client) (interface{}
 	return &RPCClient{client: c}, nil
 }
 
-// This is the implementation of plugin.GRPCPlugin so we can serve/consume this.
+// TranslatorGRPCPlugin is the implementation of plugin.GRPCPlugin so we can serve/consume this.
 type TranslatorGRPCPlugin struct {
 	// GRPCPlugin must still implement the Plugin interface
 	plugin.Plugin
