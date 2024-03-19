@@ -1,0 +1,12 @@
+translator:
+  path: "./test_plugins_path"
+  plugins:
+    - name: "gerrit-translator"
+      pluginURL: "http://github.com/cdevents/gerrit-translator/version/plugin"
+      messageBroker: "http://cdevents.message.com/default/events-broker"
+    - name: "github-translator"
+      pluginURL: "http://github.com/cdevents/github-translator/version/plugin"
+      messageBroker: "http://cdevents.message.com/default/events-broker-2"
+    - name: "k8Events-translator"
+      pluginURL: "http://github.com/cdevents/k8Events-translator/version/plugin"
+      messageBroker: "http://cdevents.message.com/default/events-broker-2"
