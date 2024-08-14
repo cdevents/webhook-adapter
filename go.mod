@@ -3,7 +3,7 @@ module github.com/cdevents/webhook-adapter
 go 1.22.0
 
 require (
-	github.com/cdevents/sdk-go v0.3.3-0.20240724093315-1078d5069c99
+	github.com/cdevents/sdk-go v0.4.1
 	github.com/cloudevents/sdk-go/v2 v2.15.2
 	github.com/hashicorp/go-plugin v1.6.0
 	github.com/stretchr/testify v1.9.0
