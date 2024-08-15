@@ -81,7 +81,7 @@ func TestValidate_InValidURL(t *testing.T) {
 func TestSendCDEvent(t *testing.T) {
 	eventToSend := "{\n  \"context\": {\n    \"version\": \"0.3.0\",\n    \"id\": \"eb175ff7-2fda-44c5-bdb4-17b1c7342fc0\",\n    \"source\": \"http://dev.cdevents\",\n    \"type\": \"dev.cdevents.pipelinerun.finished.0.2.0\",\n    \"timestamp\": \"2024-02-29T15:23:09Z\"\n  },\n  \"subject\": {\n    \"id\": \"/dev/pipeline/run/subject\",\n    \"source\": \"/dev/pipeline/run/subject\",\n    \"type\": \"pipelineRun\",\n    \"content\": {\n      \"pipelineName\": \"Name-pipeline\",\n      \"url\": \"http://dev/pipeline/url\",\n      \"outcome\": \"success\",\n      \"errors\": \"errors to place\"\n    }\n  },\n  \"customData\": {\n  },\n  \"customDataContentType\": \"application/json\"\n}"
 
-	err := SendCDEvent(eventToSend, "http://cdevents.message.com/default/events-broker")
+	err := SendCDEvent(eventToSend, "http://dummyAddress/default/events-broker")
 	assert.Error(t, err, "Expected an error")
 	assert.Contains(t, err.Error(), "failed to send CDEvent", "Expected log message not found")
 }
