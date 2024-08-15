@@ -94,11 +94,12 @@ func SendCDEvent(event string, messageBrokerURL string) error {
 		log.Printf("failed to create client, %v", err)
 		return err
 	}
-	if result := c.Send(ctx, *ce); cloudevents.IsNACK(result) || cloudevents.IsUndelivered(result) {
+	result := c.Send(ctx, *ce)
+	if cloudevents.IsNACK(result) || cloudevents.IsUndelivered(result) {
 		log.Printf("Failed to send CDEvent, %v", result)
 		return errors.New("failed to send CDEvent to target message-broker URL: " + messageBrokerURL)
-	} else {
-		log.Printf("Sent CDEvent to target message-broker URL: %s", messageBrokerURL)
 	}
+
+	log.Printf("Sent CDEvent to target message-broker URL: %v", result)
 	return nil
 }
