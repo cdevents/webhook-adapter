@@ -21,12 +21,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	cdeventssdk "github.com/cdevents/sdk-go/pkg/api"
-	cloudevents "github.com/cloudevents/sdk-go/v2"
-	"gopkg.in/yaml.v3"
 	"log"
 	"net/url"
 	"os"
+
+	cdevents "github.com/cdevents/sdk-go/pkg/api"
+	cdevents04 "github.com/cdevents/sdk-go/pkg/api/v04"
+	cloudevents "github.com/cloudevents/sdk-go/v2"
+	"gopkg.in/yaml.v3"
 )
 
 type Plugin struct {
@@ -73,12 +75,12 @@ func ValidateURL(URL string) (string, error) {
 
 func SendCDEvent(event string, messageBrokerURL string) error {
 	fmt.Println("IN SendCDEvent with event " + event)
-	cdEvent, err := cdeventssdk.NewFromJsonString(event)
+	cdEvent, err := cdevents04.NewFromJsonString(event)
 	if err != nil {
 		log.Printf("failed to create CDEvent from Json string, %v", err)
 		return err
 	}
-	ce, err := cdeventssdk.AsCloudEvent(cdEvent)
+	ce, err := cdevents.AsCloudEvent(cdEvent)
 	if err != nil {
 		log.Printf("failed to create CDEvent as CloudEvent, %v", err)
 		return err
@@ -92,11 +94,12 @@ func SendCDEvent(event string, messageBrokerURL string) error {
 		log.Printf("failed to create client, %v", err)
 		return err
 	}
-	if result := c.Send(ctx, *ce); cloudevents.IsNACK(result) {
+	result := c.Send(ctx, *ce)
+	if cloudevents.IsNACK(result) || cloudevents.IsUndelivered(result) {
 		log.Printf("Failed to send CDEvent, %v", result)
-		return errors.New("failed to send CDEvent")
-	} else {
-		log.Println("Sent CDEvent to target message-broker URL")
+		return errors.New("failed to send CDEvent to target message-broker URL: " + messageBrokerURL)
 	}
+
+	log.Printf("Sent CDEvent to target message-broker URL: %v", result)
 	return nil
 }

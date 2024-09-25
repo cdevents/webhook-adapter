@@ -84,6 +84,13 @@ func downloadPlugin(translatorPlugin cdevents.Plugin, pluginPath string, transla
 
 func makeHandler(translatorPlugin cdevents.Plugin, pluginPath string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Error reading request body", http.StatusInternalServerError)
+			return
+		}
+		log.Println("Received event payload : " + string(body))
+
 		client := plugin.NewClient(&plugin.ClientConfig{
 			HandshakeConfig: cdevents.Handshake,
 			Plugins:         cdevents.PluginMap,
@@ -114,18 +121,13 @@ func makeHandler(translatorPlugin cdevents.Plugin, pluginPath string) http.Handl
 			http.Error(w, "Only POST requests are allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, "Error reading request body", http.StatusInternalServerError)
-			return
-		}
-		log.Println("Received event payload : " + string(body))
+
 		event, err := eventTranslator.TranslateEvent(string(body), r.Header)
-		log.Println("Event translated : " + event)
 		if err != nil {
 			http.Error(w, "Error translating event", http.StatusInternalServerError)
 			return
 		}
+		log.Println("Event translated : " + event)
 		err = cdevents.SendCDEvent(event, translatorPlugin.MessageBroker)
 		if err != nil {
 			http.Error(w, "Error sending CDEvent", http.StatusInternalServerError)
